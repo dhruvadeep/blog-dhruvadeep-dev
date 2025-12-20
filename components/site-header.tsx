@@ -1,94 +1,151 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ModeToggle } from "@/components/mode-toggle";
 
-export function SiteHeader() {
+// --- Types ---
+interface NavItem {
+  name: string;
+  href: string;
+}
+
+const navItems: NavItem[] = [
+  { name: "Home", href: "/" },
+  { name: "All Posts", href: "/posts" },
+  { name: "Resume", href: "/resume" },
+  { name: "Contact", href: "/contact" },
+];
+
+export default function SiteHeader() {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const navItems = [
-    { name: "Home", href: "/" },
-    { name: "Product", href: "#" },
-    { name: "Services", href: "#" },
-    { name: "Blog", href: "/" },
-    { name: "Pricing", href: "#" },
-  ];
+  // Lock body scroll when mobile menu is open (optional, good for UX)
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [isOpen]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-            S
-          </div>
-          <span className="text-xl font-bold tracking-tight">slothui</span>
+    <motion.header
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-0 z-50 w-full border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-black/60 dark:border-white/5 supports-[backdrop-filter]:bg-white/60"
+    >
+      <div className="container mx-auto flex h-20 items-center justify-between px-6 md:px-12">
+        {/* --- LOGO SECTION: The "Echo" Effect --- */}
+        <div className="relative flex items-center justify-center">
+          <a href="/" className="group relative z-10 flex items-center">
+            {/* Main Text */}
+            <span className="font-sans text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Echo of Lifes
+            </span>
+
+            {/* The Echo Ripples (Absolute positioned behind main text) */}
+            <span className="pointer-events-none absolute inset-0 -z-10 flex select-none items-center text-xl font-bold tracking-tight text-slate-900/30 dark:text-white/30">
+              <motion.span
+                initial={{ opacity: 0, scale: 1 }}
+                animate={{ opacity: [0, 0.6, 0], scale: [1, 1.05, 1.15] }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0,
+                }}
+                className="whitespace-nowrap"
+              >
+                Echo of Lifes
+              </motion.span>
+            </span>
+
+            <span className="pointer-events-none absolute inset-0 -z-10 flex select-none items-center text-xl font-bold tracking-tight text-slate-900/10 dark:text-white/10">
+              <motion.span
+                initial={{ opacity: 0, scale: 1 }}
+                animate={{ opacity: [0, 0.4, 0], scale: [1, 1.1, 1.3] }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.8, // Staggered delay for echo effect
+                }}
+                className="whitespace-nowrap"
+              >
+                Echo of Lifes
+              </motion.span>
+            </span>
+          </a>
         </div>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        {/* --- DESKTOP NAV --- */}
+        <nav className="hidden md:flex items-center gap-10">
           {navItems.map((item) => (
-            <Link
+            <motion.a
               key={item.name}
               href={item.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="relative text-sm font-medium text-slate-600 transition-colors hover:text-black dark:text-slate-300 dark:hover:text-white"
+              whileHover={{ y: -2 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               {item.name}
-            </Link>
+              {/* Subtle underline dot on hover */}
+              <span className="absolute -bottom-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-slate-900 opacity-0 transition-opacity group-hover:opacity-100 dark:bg-white" />
+            </motion.a>
           ))}
+          <ModeToggle />
         </nav>
 
-        {/* Actions */}
-        <div className="hidden md:flex items-center gap-4">
-          <ModeToggle />
-          <Button variant="ghost" size="sm">
-            Contact Us
-          </Button>
-          <Button size="sm" className="rounded-full px-6">
-            Try For Free
-          </Button>
-        </div>
-
-        {/* Mobile Menu Toggle */}
-        <button className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        {/* --- MOBILE TOGGLE --- */}
+        <button
+          className="md:hidden p-2 text-slate-800 dark:text-slate-200 focus:outline-none"
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label="Toggle menu"
+        >
+          <motion.div initial={false} animate={{ rotate: isOpen ? 90 : 0 }}>
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </motion.div>
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* --- MOBILE MENU OVERLAY --- */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
+            animate={{ opacity: 1, height: "100vh" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t bg-background"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="absolute left-0 top-full w-full overflow-hidden bg-white/95 backdrop-blur-xl dark:bg-black/95 md:hidden border-t border-slate-100 dark:border-white/5"
           >
-            <div className="flex flex-col space-y-4 p-4">
-              {navItems.map((item) => (
-                <Link
+            <div className="flex flex-col items-center justify-center space-y-8 p-10 pt-20">
+              {navItems.map((item, index) => (
+                <motion.a
                   key={item.name}
                   href={item.href}
-                  className="text-sm font-medium"
                   onClick={() => setIsOpen(false)}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="text-2xl font-medium text-slate-800 dark:text-slate-200"
                 >
                   {item.name}
-                </Link>
+                </motion.a>
               ))}
-              <div className="flex flex-col gap-2 pt-4">
-                <Button variant="outline" className="w-full">
-                  Contact Us
-                </Button>
-                <Button className="w-full">Try For Free</Button>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: navItems.length * 0.1 }}
+              >
+                <ModeToggle />
+              </motion.div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </motion.header>
   );
 }

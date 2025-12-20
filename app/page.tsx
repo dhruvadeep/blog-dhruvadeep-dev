@@ -2,7 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SiteHeader } from "@/components/site-header";
+import SiteHeader from "@/components/site-header";
 import {
   FeaturedCard,
   PostCard,
@@ -18,7 +18,7 @@ export default function BlogPage() {
     <div className="min-h-screen bg-background font-sans selection:bg-primary/20">
       <SiteHeader />
 
-      <main className="container mx-auto px-4 py-8 md:py-12">
+      <main className="container mx-auto px-4 pt-28 pb-8 md:pt-32 md:pb-12">
         {/* Hero Section */}
         <BlogHero />
 
