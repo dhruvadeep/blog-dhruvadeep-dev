@@ -7,7 +7,7 @@ export const FEATURED_POST = {
     avatar:
       "https://media.licdn.com/dms/image/v2/D5603AQGa8M6K-KDkbA/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1720429026541?e=1767830400&v=beta&t=8me0eSd47Ega5n-bIWTb38gSVOKCPJY6_jR-lbg1QwY",
   },
-  date: "Jun 25, 2025",
+  date: "Dec 21, 2025",
   tags: ["Web Development", "Design System", "Python"],
   image:
     "https://media.licdn.com/dms/image/v2/D5622AQHFdsQLIvTSGQ/feedshare-shrink_1280/feedshare-shrink_1280/0/1720435854623?e=1767830400&v=beta&t=vD3LDUGhfexkl32tKhUCz3vWxm5dc2kOWFlDHn9tivY",
