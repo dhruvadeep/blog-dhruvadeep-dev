@@ -1,15 +1,16 @@
 export const FEATURED_POST = {
-  title: "SlothUI: The Ultimate UI Framework for the Lazy Gen Z Developer",
+  title: "Email is decentralized, which means I can quit Gmail anytime soon",
   excerpt:
-    "With SlothUI, you can unleash your inner Gen Z and just stop caring about anything else while AI does the heavy lifting.",
+    "To get started, email, the backbone of modern communication, is a decentralized platform. It feels decentralized yet is fiercely guarded by tech titans. Intrigued, I ventured into the realm of building my own mail server—only to face a formidable challenge: the giants of cloud computing blocking my every move. They had their reasons, well-documented and fair, but decentralization seemed like a myth.",
   author: {
-    name: "Azunyan U. Wu",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+    name: "Dhruvadeep Malakar",
+    avatar:
+      "https://media.licdn.com/dms/image/v2/D5603AQGa8M6K-KDkbA/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1720429026541?e=1767830400&v=beta&t=8me0eSd47Ega5n-bIWTb38gSVOKCPJY6_jR-lbg1QwY",
   },
   date: "Jun 25, 2025",
-  tags: ["UI/UX", "Design System", "Sleep & Care"],
+  tags: ["Web Development", "Design System", "Python"],
   image:
-    "https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&q=80&w=1600",
+    "https://media.licdn.com/dms/image/v2/D5622AQHFdsQLIvTSGQ/feedshare-shrink_1280/feedshare-shrink_1280/0/1720435854623?e=1767830400&v=beta&t=vD3LDUGhfexkl32tKhUCz3vWxm5dc2kOWFlDHn9tivY",
 };
 
 export const POSTS = [
