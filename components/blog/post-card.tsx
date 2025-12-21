@@ -25,7 +25,7 @@ export function PostCard({ post, index }: PostCardProps) {
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
     >
-      <Card className="h-full flex flex-col overflow-hidden border-0 shadow-none hover:bg-accent/5 transition-colors group">
+      <Card className="h-full flex flex-col overflow-hidden border-0 shadow-none hover:bg-accent/5 transition-colors group py-0 gap-0">
         <div className="relative aspect-[16/10] overflow-hidden rounded-2xl mb-4">
           <img
             src={post.image}
@@ -36,17 +36,17 @@ export function PostCard({ post, index }: PostCardProps) {
             {post.category}
           </Badge>
         </div>
-        <CardHeader className="p-0 mb-2">
+        <CardHeader className="mb-2">
           <CardTitle className="text-xl line-clamp-2 group-hover:text-primary transition-colors">
             {post.title}
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0 mb-4 flex-grow">
+        <CardContent className="mb-4 flex-grow">
           <p className="text-muted-foreground line-clamp-2 text-sm">
             {post.excerpt}
           </p>
         </CardContent>
-        <CardFooter className="p-0 mt-auto flex items-center justify-between text-xs text-muted-foreground">
+        <CardFooter className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <User className="h-3 w-3" />
             <span>{post.author}</span>
