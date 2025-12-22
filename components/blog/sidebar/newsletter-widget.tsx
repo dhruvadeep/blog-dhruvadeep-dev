@@ -24,7 +24,7 @@ export function NewsletterWidget() {
       <CardContent className="space-y-3">
         <Input
           placeholder="your@email.com"
-          className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 focus-visible:ring-primary-foreground/30"
+          className="bg-white border-transparent text-black placeholder:text-gray-500 focus-visible:ring-white/30"
         />
         <Button variant="secondary" className="w-full font-bold">
           Subscribe
