@@ -1,4 +1,5 @@
 import { TrendingUp } from "lucide-react";
+import Image from "next/image";
 import { RecentInsight } from "@/types/blog";
 
 interface RecentInsightsProps {
@@ -18,11 +19,12 @@ export function RecentInsights({ insights }: RecentInsightsProps) {
             key={insight.id}
             className="group flex items-start gap-4 cursor-pointer"
           >
-            <div className="h-16 w-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-              <img
+            <div className="relative h-16 w-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+              <Image
                 src={insight.image}
                 alt={insight.title}
-                className="h-full w-full object-cover group-hover:scale-110 transition-transform"
+                fill
+                className="object-cover group-hover:scale-110 transition-transform"
               />
             </div>
             <div>

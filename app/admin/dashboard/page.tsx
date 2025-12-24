@@ -35,7 +35,7 @@ export default function DashboardOverview() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <p className="text-muted-foreground">
-          Overview of your blog's performance
+          Overview of your blog&apos;s performance
         </p>
       </div>
 
@@ -70,7 +70,7 @@ export default function DashboardOverview() {
                 <div key={i} className="flex items-center">
                   <div className="ml-4 space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      New comment on "Minimalism is dead"
+                      New comment on &quot;Minimalism is dead&quot;
                     </p>
                     <p className="text-sm text-muted-foreground">2 hours ago</p>
                   </div>
@@ -97,7 +97,7 @@ export default function DashboardOverview() {
                     </p>
                   </div>
                   <div className="ml-auto font-medium">
-                    {Math.floor(Math.random() * 5000) + 1000} views
+                    {((post.id * 1234) % 5000) + 1000} views
                   </div>
                 </div>
               ))}

@@ -22,7 +22,8 @@ export default function AdminDashboardLayout({
     if (!hasSession) {
       router.push("/admin");
     } else {
-      setIsLoading(false);
+      // Wrap in setTimeout to avoid synchronous state update warning
+      setTimeout(() => setIsLoading(false), 0);
     }
   }, [router]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,26 +21,19 @@ export default function EditPostPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const [content, setContent] = useState("");
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
-  const [image, setImage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   // Unwrap params using React.use()
   const resolvedParams = use(params);
   const postId = parseInt(resolvedParams.id);
+  const post = POSTS.find((p) => p.id === postId);
 
-  useEffect(() => {
-    const post = POSTS.find((p) => p.id === postId);
-    if (post) {
-      setTitle(post.title);
-      setCategory(post.category);
-      setImage(post.image);
-      // Mock content since we don't have full content in the list
-      setContent(`<p>${post.excerpt}</p><p>Rest of the content...</p>`);
-    }
-  }, [postId]);
+  const [content, setContent] = useState(
+    post ? `<p>${post.excerpt}</p><p>Rest of the content...</p>` : ""
+  );
+  const [title, setTitle] = useState(post?.title || "");
+  const [category, setCategory] = useState(post?.category || "");
+  const [image, setImage] = useState(post?.image || "");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,9 +66,12 @@ export default function EditPostPage({
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select
+                value={category}
+                onValueChange={(val) => setCategory(val || "")}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.filter((c) => c !== "All").map((category) => (

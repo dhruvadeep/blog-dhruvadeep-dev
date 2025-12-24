@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -41,7 +42,7 @@ export default function SiteHeader() {
       <div className="container mx-auto flex h-20 items-center justify-between px-6 md:px-12">
         {/* --- LOGO SECTION: The "Echo" Effect --- */}
         <div className="relative flex items-center justify-center">
-          <a href="/" className="group relative z-10 flex items-center">
+          <Link href="/" className="group relative z-10 flex items-center">
             {/* Main Text */}
             <span className="font-sans text-xl font-bold tracking-tight text-slate-900 dark:text-white">
               Echo of Lifes
@@ -79,7 +80,7 @@ export default function SiteHeader() {
                 Echo of Lifes
               </motion.span>
             </span>
-          </a>
+          </Link>
         </div>
 
         {/* --- DESKTOP NAV --- */}

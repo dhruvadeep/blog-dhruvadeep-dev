@@ -5,16 +5,16 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 
+const placeholders = [
+  "Search blog...",
+  "Find tutorials...",
+  "React guides...",
+  "UI patterns...",
+];
+
 export function SearchWidget() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [searchValue, setSearchValue] = useState("");
-
-  const placeholders = [
-    "Search blog...",
-    "Find tutorials...",
-    "React guides...",
-    "UI patterns...",
-  ];
 
   useEffect(() => {
     const interval = setInterval(() => {

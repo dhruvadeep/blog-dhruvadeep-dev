@@ -50,7 +50,7 @@ export default function NewPostPage() {
               <Label htmlFor="category">Category</Label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.filter((c) => c !== "All").map((category) => (

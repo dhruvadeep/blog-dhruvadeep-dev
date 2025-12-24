@@ -4,11 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { TrendingUp, Eye, Users } from "lucide-react";
 
-interface TrendingTopicsProps {
-  tags: string[];
-}
-
-export function TrendingTopics({ tags }: TrendingTopicsProps) {
+export function TrendingTopics() {
   const data = [35, 52, 48, 76, 65, 89, 72];
   const max = Math.max(...data);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, User, Heart } from "lucide-react";
@@ -24,11 +25,15 @@ export function PostCard({ post, index }: PostCardProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "{}");
-    if (likedPosts[post.id]) {
-      setIsLiked(true);
-    }
+    // Wrap in setTimeout to avoid synchronous state update warning
+    const timer = setTimeout(() => {
+      setMounted(true);
+      const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "{}");
+      if (likedPosts[post.id]) {
+        setIsLiked(true);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [post.id]);
 
   const toggleLike = (e: React.MouseEvent) => {
@@ -75,10 +80,11 @@ export function PostCard({ post, index }: PostCardProps) {
     >
       <Card className="h-full flex flex-col overflow-hidden border-border/40 bg-card/50 backdrop-blur-sm hover:bg-accent/5 hover:border-primary/20 hover:shadow-xl transition-all duration-300 group p-0 gap-0">
         <div className="relative aspect-[16/10] overflow-hidden">
-          <img
+          <Image
             src={post.image}
             alt={post.title}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 

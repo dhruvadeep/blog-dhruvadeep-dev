@@ -138,8 +138,8 @@ export default function AboutPage() {
                   makers.
                 </p>
                 <p className="text-lg text-muted-foreground">
-                  We're committed to quality content, open source, and fostering
-                  a welcoming community for everyone.
+                  We&apos;re committed to quality content, open source, and
+                  fostering a welcoming community for everyone.
                 </p>
               </motion.div>
             </div>
