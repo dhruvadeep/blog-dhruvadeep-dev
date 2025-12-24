@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      // media.licdn.com
+      {
+        protocol: "https",
+        hostname: "media.licdn.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };
