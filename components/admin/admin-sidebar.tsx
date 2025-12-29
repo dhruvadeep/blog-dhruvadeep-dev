@@ -10,6 +10,7 @@ import {
   BarChart,
   Settings,
   LogOut,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -26,6 +27,11 @@ const sidebarItems = [
     icon: FileText,
   },
   {
+    title: "Tags",
+    href: "/admin/dashboard/tags",
+    icon: Tag,
+  },
+  {
     title: "Analytics",
     href: "/admin/dashboard/analytics",
     icon: BarChart,
@@ -34,6 +40,11 @@ const sidebarItems = [
     title: "Subscribers",
     href: "/admin/dashboard/subscribers",
     icon: Users,
+  },
+  {
+    title: "Tags",
+    href: "/admin/dashboard/tags",
+    icon: FileText,
   },
   {
     title: "Settings",

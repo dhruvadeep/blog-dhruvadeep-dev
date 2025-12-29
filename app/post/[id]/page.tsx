@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { POSTS, RECENT_INSIGHTS } from "@/data/blog-data";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Clock, User } from "lucide-react";
@@ -9,9 +8,13 @@ import SiteHeader from "@/components/site-header";
 import { BlogFooter } from "@/components/blog/blog-footer";
 import { NewsletterWidget } from "@/components/blog/sidebar/newsletter-widget";
 import { RecentInsights } from "@/components/blog/sidebar/recent-insights";
+import { getPostById, getAllPosts, getRecentPosts } from "@/lib/db/queries";
+import { ViewCounter } from "@/components/view-counter";
+
 // This is required for static site generation with dynamic routes
 export async function generateStaticParams() {
-  return POSTS.map((post) => ({
+  const posts = getAllPosts();
+  return posts.map((post) => ({
     id: post.id.toString(),
   }));
 }
@@ -22,15 +25,47 @@ export default async function PostPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const post = POSTS.find((p) => p.id === parseInt(id));
+  const postId = parseInt(id);
+  const dbPost = getPostById(postId);
+  const recentDbPosts = getRecentPosts(3);
 
-  if (!post) {
+  if (!dbPost) {
     notFound();
   }
+
+  const post = {
+    id: dbPost.id,
+    title: dbPost.title,
+    excerpt: dbPost.excerpt,
+    content: dbPost.content,
+    category: dbPost.category_name,
+    author: dbPost.author_name,
+    authorAvatar: dbPost.author_avatar,
+    date: new Date(dbPost.created_at).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }),
+    readTime: dbPost.read_time,
+    image: dbPost.cover_image,
+    views: dbPost.views,
+  };
+
+  const recentInsights = recentDbPosts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    date: new Date(p.created_at).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }),
+    image: p.cover_image,
+  }));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SiteHeader />
+      <ViewCounter postId={postId} />
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8">
@@ -53,6 +88,9 @@ export default async function PostPage({
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" /> {post.readTime}
                   </span>
+                  <span className="text-sm text-muted-foreground ml-2">
+                    {post.views} views
+                  </span>
                 </div>
 
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
@@ -61,9 +99,17 @@ export default async function PostPage({
 
                 <div className="flex items-center justify-between border-b pb-8 pt-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                      {/* Placeholder avatar if not available in data */}
-                      <User className="h-6 w-6 text-muted-foreground" />
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden relative">
+                      {post.authorAvatar ? (
+                        <Image
+                          src={post.authorAvatar}
+                          alt={post.author}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <User className="h-6 w-6 text-muted-foreground" />
+                      )}
                     </div>
                     <div>
                       <p className="text-sm font-medium">{post.author}</p>
@@ -90,47 +136,17 @@ export default async function PostPage({
                   {post.excerpt}
                 </p>
 
-                {/* Mock Content since we don't have full content in data */}
-                <div className="mt-8 space-y-6">
-                  <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-                    do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-                    ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                  </p>
-                  <h2>The Core Concept</h2>
-                  <p>
-                    Duis aute irure dolor in reprehenderit in voluptate velit
-                    esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-                    occaecat cupidatat non proident, sunt in culpa qui officia
-                    deserunt mollit anim id est laborum.
-                  </p>
-                  <blockquote>
-                    &quot;The best way to predict the future is to invent
-                    it.&quot;
-                  </blockquote>
-                  <p>
-                    Sed ut perspiciatis unde omnis iste natus error sit
-                    voluptatem accusantium doloremque laudantium, totam rem
-                    aperiam, eaque ipsa quae ab illo inventore veritatis et
-                    quasi architecto beatae vitae dicta sunt explicabo.
-                  </p>
-                  <h3>Why This Matters</h3>
-                  <p>
-                    Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut
-                    odit aut fugit, sed quia consequuntur magni dolores eos qui
-                    ratione voluptatem sequi nesciunt. Neque porro quisquam est,
-                    qui dolorem ipsum quia dolor sit amet, consectetur, adipisci
-                    velit.
-                  </p>
-                </div>
+                <div
+                  className="mt-8 space-y-6"
+                  dangerouslySetInnerHTML={{ __html: post.content }}
+                />
               </div>
             </article>
           </div>
 
           <aside className="lg:col-span-4 pl-0 lg:pl-8">
             <div className="sticky top-24 space-y-8">
-              <RecentInsights insights={RECENT_INSIGHTS} />
+              <RecentInsights insights={recentInsights} />
               <NewsletterWidget />
             </div>
           </aside>

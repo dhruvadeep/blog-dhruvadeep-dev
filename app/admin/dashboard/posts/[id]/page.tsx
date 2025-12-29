@@ -1,48 +1,32 @@
-"use client";
+import { notFound } from "next/navigation";
+import { EditPostForm } from "@/components/admin/edit-post-form";
+import { getPostById, getCategories } from "@/lib/db/queries";
 
-import { useState, use } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { TiptapEditor } from "@/components/admin/tiptap-editor";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CATEGORIES, POSTS } from "@/data/blog-data";
-
-export default function EditPostPage({
+export default async function EditPostPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const router = useRouter();
+  const { id } = await params;
+  const postId = parseInt(id);
+  const post = getPostById(postId);
+  const categories = getCategories();
 
-  // Unwrap params using React.use()
-  const resolvedParams = use(params);
-  const postId = parseInt(resolvedParams.id);
-  const post = POSTS.find((p) => p.id === postId);
+  if (!post) {
+    notFound();
+  }
 
-  const [content, setContent] = useState(
-    post ? `<p>${post.excerpt}</p><p>Rest of the content...</p>` : ""
-  );
-  const [title, setTitle] = useState(post?.title || "");
-  const [category, setCategory] = useState(post?.category || "");
-  const [image, setImage] = useState(post?.image || "");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    router.push("/admin/dashboard/posts");
+  const formattedPost = {
+    id: post.id,
+    title: post.title,
+    content: post.content || "",
+    category: post.category_name || "",
+    image: post.cover_image || "",
+    excerpt: post.excerpt || "",
+    slug: post.slug,
   };
+
+  const categoryNames = categories.map((c) => c.name);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -51,63 +35,7 @@ export default function EditPostPage({
         <p className="text-muted-foreground">Edit your blog post</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={category}
-                onValueChange={(val) => setCategory(val || "")}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.filter((c) => c !== "All").map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="image">Cover Image URL</Label>
-              <Input
-                id="image"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                placeholder="https://..."
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Content</Label>
-            <TiptapEditor content={content} onChange={setContent} />
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </form>
+      <EditPostForm post={formattedPost} categories={categoryNames} />
     </div>
   );
 }

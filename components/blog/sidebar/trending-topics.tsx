@@ -1,12 +1,9 @@
-"use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { TrendingUp, Eye, Users } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+import { getTopPosts } from "@/lib/db/queries";
 
-export function TrendingTopics() {
-  const data = [35, 52, 48, 76, 65, 89, 72];
-  const max = Math.max(...data);
+export async function TrendingTopics() {
+  const topPosts = getTopPosts(5);
 
   return (
     <Card className="bg-card border-border/50 shadow-sm rounded-3xl overflow-hidden">
@@ -17,49 +14,21 @@ export function TrendingTopics() {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 pt-4 space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Eye className="h-3 w-3" /> Total Views
-            </p>
-            <p className="text-2xl font-bold">128K</p>
-            <p className="text-xs text-green-500 font-medium">
-              +12% this month
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Users className="h-3 w-3" /> Readers
-            </p>
-            <p className="text-2xl font-bold">42K</p>
-            <p className="text-xs text-green-500 font-medium">+8% new</p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Weekly Activity</span>
-            <span>Last 7 days</span>
-          </div>
-          <div className="flex items-end justify-between h-24 gap-2 pt-2">
-            {data.map((value, i) => (
-              <div
-                key={i}
-                className="relative flex-1 h-full flex items-end group"
-              >
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${(value / max) * 100}%` }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="w-full bg-primary/20 rounded-sm group-hover:bg-primary/40 transition-colors relative"
-                >
-                  <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] px-2 py-1 rounded shadow-sm whitespace-nowrap transition-opacity z-10 pointer-events-none">
-                    {value}k
-                  </div>
-                </motion.div>
+        <div className="space-y-4">
+          {topPosts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No insights yet.</p>
+          ) : (
+            topPosts.map((post, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <span className="text-sm font-medium line-clamp-1 flex-1 mr-4">
+                  {post.title}
+                </span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {post.views} views
+                </span>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
       </CardContent>
     </Card>

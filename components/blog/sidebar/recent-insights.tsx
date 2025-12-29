@@ -1,5 +1,6 @@
 import { TrendingUp } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { RecentInsight } from "@/types/blog";
 
 interface RecentInsightsProps {
@@ -15,8 +16,9 @@ export function RecentInsights({ insights }: RecentInsightsProps) {
       </h3>
       <div className="space-y-4">
         {insights.map((insight) => (
-          <div
+          <Link
             key={insight.id}
+            href={`/post/${insight.id}`}
             className="group flex items-start gap-4 cursor-pointer"
           >
             <div className="relative h-16 w-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
@@ -35,7 +37,7 @@ export function RecentInsights({ insights }: RecentInsightsProps) {
                 {insight.date}
               </p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

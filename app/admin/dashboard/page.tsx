@@ -1,20 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { POSTS } from "@/data/blog-data";
+import { getAllPosts } from "@/lib/db/queries";
 import { Eye, Users, FileText, TrendingUp } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default function DashboardOverview() {
+  const posts = getAllPosts();
+  const totalViews = posts.reduce((acc, post) => acc + (post.views || 0), 0);
+
   const stats = [
     {
       title: "Total Posts",
-      value: POSTS.length,
+      value: posts.length,
       icon: FileText,
-      description: "+2 from last month",
+      description: "All time",
     },
     {
       title: "Total Views",
-      value: "45.2k",
+      value: totalViews.toLocaleString(),
       icon: Eye,
-      description: "+12% from last month",
+      description: "All time",
     },
     {
       title: "Subscribers",
@@ -86,19 +91,17 @@ export default function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
-              {POSTS.slice(0, 3).map((post) => (
+              {posts.slice(0, 3).map((post) => (
                 <div key={post.id} className="flex items-center">
                   <div className="ml-4 space-y-1">
                     <p className="text-sm font-medium leading-none">
                       {post.title}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {post.readTime}
+                      {post.read_time}
                     </p>
                   </div>
-                  <div className="ml-auto font-medium">
-                    {((post.id * 1234) % 5000) + 1000} views
-                  </div>
+                  <div className="ml-auto font-medium">{post.views} views</div>
                 </div>
               ))}
             </div>

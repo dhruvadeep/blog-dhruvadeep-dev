@@ -4,6 +4,7 @@ export interface Author {
 }
 
 export interface FeaturedPost {
+  id: number;
   title: string;
   excerpt: string;
   author: Author;

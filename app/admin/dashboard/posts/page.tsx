@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -9,10 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { POSTS } from "@/data/blog-data";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { getAllPosts } from "@/lib/db/queries";
+import { Plus, Pencil } from "lucide-react";
+import { DeletePostButton } from "@/components/admin/delete-post-button";
+import { FeaturePostButton } from "@/components/admin/feature-post-button";
+
+export const dynamic = "force-dynamic";
 
 export default function PostsPage() {
+  const posts = getAllPosts();
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -20,7 +26,10 @@ export default function PostsPage() {
           <h2 className="text-3xl font-bold tracking-tight">Posts</h2>
           <p className="text-muted-foreground">Manage your blog posts</p>
         </div>
-        <Link href="/admin/dashboard/posts/new" className={cn(buttonVariants())}>
+        <Link
+          href="/admin/dashboard/posts/new"
+          className={cn(buttonVariants())}
+        >
           <Plus className="mr-2 h-4 w-4" /> New Post
         </Link>
       </div>
@@ -37,27 +46,29 @@ export default function PostsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {POSTS.map((post) => (
+            {posts.map((post) => (
               <TableRow key={post.id}>
                 <TableCell className="font-medium">{post.title}</TableCell>
-                <TableCell>{post.author}</TableCell>
-                <TableCell>{post.category}</TableCell>
-                <TableCell>{post.date}</TableCell>
+                <TableCell>{post.author_name}</TableCell>
+                <TableCell>{post.category_name}</TableCell>
+                <TableCell>
+                  {new Date(post.created_at).toLocaleDateString()}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
+                    <FeaturePostButton
+                      id={post.id}
+                      isFeatured={!!post.is_featured}
+                    />
                     <Link
                       href={`/admin/dashboard/posts/${post.id}`}
-                      className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "icon" })
+                      )}
                     >
                       <Pencil className="h-4 w-4" />
                     </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <DeletePostButton id={post.id} />
                   </div>
                 </TableCell>
               </TableRow>

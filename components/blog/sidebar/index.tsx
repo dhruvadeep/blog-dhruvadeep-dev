@@ -2,15 +2,28 @@ import { SearchWidget } from "./search-widget";
 import { TrendingTopics } from "./trending-topics";
 import { NewsletterWidget } from "./newsletter-widget";
 import { RecentInsights } from "./recent-insights";
-import { RECENT_INSIGHTS } from "@/data/blog-data";
+import { getRecentPosts } from "@/lib/db/queries";
 
-export function Sidebar() {
+export async function Sidebar() {
+  const recentDbPosts = getRecentPosts(3);
+
+  const recentInsights = recentDbPosts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    date: new Date(p.created_at).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }),
+    image: p.cover_image,
+  }));
+
   return (
     <div className="space-y-8">
       <SearchWidget />
       <TrendingTopics />
       <NewsletterWidget />
-      <RecentInsights insights={RECENT_INSIGHTS} />
+      <RecentInsights insights={recentInsights} />
     </div>
   );
 }

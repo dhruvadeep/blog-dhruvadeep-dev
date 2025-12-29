@@ -1,5 +1,7 @@
 "use client";
 
+import { uploadImage } from "@/app/actions";
+import { useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -41,6 +43,8 @@ export function TiptapEditor({
   onChange,
   placeholder = "Start writing your blog post...",
 }: TiptapEditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -81,11 +85,27 @@ export function TiptapEditor({
     return null;
   }
 
-  const addImage = () => {
-    const url = window.prompt("Image URL");
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const { url } = await uploadImage(formData);
+        editor.chain().focus().setImage({ src: url }).run();
+      } catch (error) {
+        console.error("Failed to upload image", error);
+        alert("Failed to upload image");
+      }
     }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const addImage = () => {
+    fileInputRef.current?.click();
   };
 
   const setLink = () => {
@@ -300,6 +320,13 @@ export function TiptapEditor({
         </Button>
       </div>
       <EditorContent editor={editor} />
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleImageUpload}
+      />
     </div>
   );
 }

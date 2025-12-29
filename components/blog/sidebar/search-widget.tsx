@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const placeholders = [
   "Search blog...",
@@ -14,7 +15,11 @@ const placeholders = [
 
 export function SearchWidget() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [searchValue, setSearchValue] = useState("");
+  const searchParams = useSearchParams();
+  const [searchValue, setSearchValue] = useState(
+    searchParams.get("search") || ""
+  );
+  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,8 +28,17 @@ export function SearchWidget() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      router.push(`/posts?search=${encodeURIComponent(searchValue)}`);
+    } else {
+      router.push("/posts");
+    }
+  };
+
   return (
-    <div className="relative">
+    <form onSubmit={handleSearch} className="relative">
       <Input
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
@@ -47,7 +61,12 @@ export function SearchWidget() {
           )}
         </AnimatePresence>
       </div>
-      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-    </div>
+      <button
+        type="submit"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+      >
+        <Search className="h-4 w-4" />
+      </button>
+    </form>
   );
 }

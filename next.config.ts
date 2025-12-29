@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  serverExternalPackages: ["better-sqlite3"],
   images: {
     remotePatterns: [
       {
@@ -16,6 +17,17 @@ const nextConfig: NextConfig = {
         hostname: "media.licdn.com",
         port: "",
         pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "randomuser.me",
+        port: "",
+        pathname: "/**",
+      },
+      // allow all https
+      {
+        protocol: "https",
+        hostname: "**",
       },
     ],
   },
