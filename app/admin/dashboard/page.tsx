@@ -1,5 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAllPosts } from "@/lib/db/queries";
+import {
+  getAllPosts,
+  getSubscriberCount,
+  getEngagementRate,
+  getRecentActivity,
+} from "@/lib/db/queries";
 import { Eye, Users, FileText, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +12,9 @@ export const dynamic = "force-dynamic";
 export default function DashboardOverview() {
   const posts = getAllPosts();
   const totalViews = posts.reduce((acc, post) => acc + (post.views || 0), 0);
+  const subscriberCount = getSubscriberCount();
+  const engagementRate = getEngagementRate();
+  const recentActivity = getRecentActivity();
 
   const stats = [
     {
@@ -23,15 +31,15 @@ export default function DashboardOverview() {
     },
     {
       title: "Subscribers",
-      value: "2,350",
+      value: subscriberCount.toLocaleString(),
       icon: Users,
-      description: "+180 new subscribers",
+      description: "Total subscribers",
     },
     {
-      title: "Engagement Rate",
-      value: "12.5%",
+      title: "Avg. Views/Post",
+      value: engagementRate.toString(),
       icon: TrendingUp,
-      description: "+2.4% from last month",
+      description: "Engagement metric",
     },
   ];
 
@@ -70,18 +78,29 @@ export default function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
-              {/* Mock activity feed */}
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center">
-                  <div className="ml-4 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      New comment on &quot;Minimalism is dead&quot;
-                    </p>
-                    <p className="text-sm text-muted-foreground">2 hours ago</p>
+              {recentActivity.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No recent activity.
+                </p>
+              ) : (
+                recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center">
+                    <div className="ml-4 space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        Visit from {activity.city || "Unknown City"},{" "}
+                        {activity.country || "Unknown Country"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(activity.created_at).toLocaleString()} - IP:{" "}
+                        {activity.ip}
+                      </p>
+                    </div>
+                    <div className="ml-auto font-medium text-xs text-muted-foreground">
+                      {activity.path}
+                    </div>
                   </div>
-                  <div className="ml-auto font-medium">+1 Comment</div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

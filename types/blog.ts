@@ -5,6 +5,7 @@ export interface Author {
 
 export interface FeaturedPost {
   id: number;
+  slug?: string;
   title: string;
   excerpt: string;
   author: Author;
@@ -15,6 +16,7 @@ export interface FeaturedPost {
 
 export interface Post {
   id: number;
+  slug?: string;
   title: string;
   excerpt: string;
   category: string;
@@ -26,6 +28,7 @@ export interface Post {
 
 export interface RecentInsight {
   id: number;
+  slug?: string;
   title: string;
   date: string;
   image: string;

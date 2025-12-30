@@ -42,11 +42,6 @@ const sidebarItems = [
     icon: Users,
   },
   {
-    title: "Tags",
-    href: "/admin/dashboard/tags",
-    icon: FileText,
-  },
-  {
     title: "Settings",
     href: "/admin/dashboard/settings",
     icon: Settings,

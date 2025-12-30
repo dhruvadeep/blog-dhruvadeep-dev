@@ -8,15 +8,80 @@ import SiteHeader from "@/components/site-header";
 import { BlogFooter } from "@/components/blog/blog-footer";
 import { NewsletterWidget } from "@/components/blog/sidebar/newsletter-widget";
 import { RecentInsights } from "@/components/blog/sidebar/recent-insights";
-import { getPostById, getAllPosts, getRecentPosts } from "@/lib/db/queries";
+import {
+  getPostById,
+  getAllPosts,
+  getRecentPosts,
+  getPostBySlug,
+  getComments,
+  logVisit,
+} from "@/lib/db/queries";
 import { ViewCounter } from "@/components/view-counter";
+import { CommentSection } from "@/components/blog/comment-section";
+import { ShareButtons } from "@/components/blog/share-buttons";
+import { headers } from "next/headers";
+import { Metadata } from "next";
 
 // This is required for static site generation with dynamic routes
 export async function generateStaticParams() {
   const posts = getAllPosts();
-  return posts.map((post) => ({
+  const params = posts.map((post) => ({
     id: post.id.toString(),
   }));
+
+  posts.forEach((post) => {
+    if (post.slug) {
+      params.push({ id: post.slug });
+    }
+  });
+
+  return params;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  let dbPost;
+  if (/^\d+$/.test(id)) {
+    dbPost = getPostById(parseInt(id));
+  } else {
+    dbPost = getPostBySlug(id);
+  }
+
+  if (!dbPost) {
+    return {
+      title: "Post Not Found",
+    };
+  }
+
+  return {
+    title: dbPost.title,
+    description: dbPost.excerpt,
+    openGraph: {
+      title: dbPost.title,
+      description: dbPost.excerpt,
+      type: "article",
+      publishedTime: dbPost.created_at,
+      authors: [dbPost.author_name],
+      images: [
+        {
+          url: dbPost.cover_image,
+          width: 1200,
+          height: 630,
+          alt: dbPost.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: dbPost.title,
+      description: dbPost.excerpt,
+      images: [dbPost.cover_image],
+    },
+  };
 }
 
 export default async function PostPage({
@@ -25,12 +90,32 @@ export default async function PostPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const postId = parseInt(id);
-  const dbPost = getPostById(postId);
-  const recentDbPosts = getRecentPosts(3);
+
+  let dbPost;
+  if (/^\d+$/.test(id)) {
+    dbPost = getPostById(parseInt(id));
+  } else {
+    dbPost = getPostBySlug(id);
+  }
 
   if (!dbPost) {
     notFound();
+  }
+
+  const postId = dbPost.id;
+  const recentDbPosts = getRecentPosts(3);
+  const comments = getComments(postId);
+  const currentUrl = `https://yourblog.com/post/${dbPost.slug || dbPost.id}`; // Replace with actual domain
+
+  // Log visit
+  try {
+    // In static generation, headers() might not be available or might cause dynamic usage error
+    // We can skip logging during build time or handle it gracefully
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") || "127.0.0.1";
+    logVisit(ip, "Unknown City", "Unknown Country", `/post/${id}`);
+  } catch (e) {
+    // console.error("Failed to log visit", e);
   }
 
   const post = {
@@ -53,6 +138,7 @@ export default async function PostPage({
 
   const recentInsights = recentDbPosts.map((p) => ({
     id: p.id,
+    slug: p.slug,
     title: p.title,
     date: new Date(p.created_at).toLocaleDateString("en-US", {
       month: "long",
@@ -118,6 +204,7 @@ export default async function PostPage({
                       </p>
                     </div>
                   </div>
+                  <ShareButtons title={post.title} url={currentUrl} />
                 </div>
               </div>
 
@@ -142,6 +229,8 @@ export default async function PostPage({
                 />
               </div>
             </article>
+
+            <CommentSection postId={postId} comments={comments} />
           </div>
 
           <aside className="lg:col-span-4 pl-0 lg:pl-8">

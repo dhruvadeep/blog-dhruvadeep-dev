@@ -1,18 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { createPostAction } from "@/app/actions";
 
 interface CreatePostFormProps {
@@ -23,8 +16,17 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
   const router = useRouter();
   const [content, setContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [category, setCategory] = useState("");
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+
+  // Auto-generate slug from title
+  useEffect(() => {
+    const generatedSlug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+    setSlug(generatedSlug);
+  }, [title]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,17 +35,9 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     formData.append("content", content);
-    formData.append("category_id", "1"); // TODO: Map category name to ID or fix DB to use names or pass IDs
     formData.append("author_id", "1"); // TODO: Get current user ID
     formData.append("read_time", "5 min read"); // TODO: Calculate read time
-
-    // Generate slug from title if not provided (or let backend do it)
-    const title = formData.get("title") as string;
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
-    formData.append("slug", slug);
+    // Slug is already in the form input, so it's in formData
 
     await createPostAction(formData);
 
@@ -56,7 +50,29 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
       <div className="grid gap-4">
         <div className="grid gap-2">
           <Label htmlFor="title">Title</Label>
-          <Input id="title" name="title" placeholder="Post title" required />
+          <Input
+            id="title"
+            name="title"
+            placeholder="Post title"
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="slug">Slug (URL)</Label>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">/post/</span>
+            <Input
+              id="slug"
+              name="slug"
+              placeholder="post-url-slug"
+              required
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="grid gap-2">
@@ -67,23 +83,17 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label htmlFor="category">Category</Label>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            <Select
+            <Input
+              list="categories"
               name="category"
-              onValueChange={(val: any) => setCategory(val || "")}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* Hidden input for form submission if needed, but we construct FormData manually mostly */}
+              placeholder="Select or type a category"
+              required
+            />
+            <datalist id="categories">
+              {categories.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="image">Cover Image URL</Label>
@@ -99,12 +109,9 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
         </div>
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Cancel
-        </Button>
+      <div className="flex justify-end">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Publishing..." : "Publish Post"}
+          {isLoading ? "Creating..." : "Create Post"}
         </Button>
       </div>
     </form>

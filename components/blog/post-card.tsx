@@ -71,7 +71,7 @@ export function PostCard({ post, index }: PostCardProps) {
   }
 
   return (
-    <Link href={`/post/${post.id}`} className="block h-full">
+    <Link href={`/post/${post.slug || post.id}`} className="block h-full">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

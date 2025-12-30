@@ -27,6 +27,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
 
   const posts: Post[] = dbPosts.map((p) => ({
     id: p.id,
+    slug: p.slug,
     title: p.title,
     excerpt: p.excerpt,
     category: p.category_name,
@@ -48,6 +49,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const featuredPost: FeaturedPost | null = featuredDbPost
     ? {
         id: featuredDbPost.id,
+        slug: featuredDbPost.slug,
         title: featuredDbPost.title,
         excerpt: featuredDbPost.excerpt,
         author: {

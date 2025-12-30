@@ -291,14 +291,14 @@ export function getTopPosts(limit: number = 5) {
   return db
     .prepare(
       `
-    SELECT p.title, a.views 
+    SELECT p.id, p.title, p.slug, a.views 
     FROM posts p 
     JOIN analytics a ON p.id = a.post_id 
     ORDER BY a.views DESC 
     LIMIT ?
   `
     )
-    .all(limit) as { title: string; views: number }[];
+    .all(limit) as { id: number; title: string; slug: string; views: number }[];
 }
 
 export function getTags() {
@@ -324,4 +324,102 @@ export function createTag(name: string) {
 
 export function deleteTag(id: number) {
   return db.prepare("DELETE FROM tags WHERE id = ?").run(id);
+}
+
+export interface DbComment {
+  id: number;
+  post_id: number;
+  author_name: string;
+  content: string;
+  created_at: string;
+}
+
+export interface DbVisit {
+  id: number;
+  ip: string;
+  city: string;
+  country: string;
+  path: string;
+  created_at: string;
+}
+
+export function getSubscriberCount(): number {
+  const result = db
+    .prepare("SELECT COUNT(*) as count FROM subscribers")
+    .get() as { count: number };
+  return result.count;
+}
+
+export function getEngagementRate(): number {
+  // Simple engagement rate: (Total Views / Total Posts) / 100 (just a placeholder logic)
+  // Or maybe (Total Comments + Total Views) / Total Posts?
+  // Let's do: Total Views / Total Posts (Average Views per Post)
+  const totalViews = getTotalViews();
+  const totalPosts = db
+    .prepare("SELECT COUNT(*) as count FROM posts")
+    .get() as { count: number };
+
+  if (totalPosts.count === 0) return 0;
+
+  // Return average views per post as a "rate" or score
+  return Math.round((totalViews / totalPosts.count) * 10) / 10;
+}
+
+export function getRecentActivity(limit: number = 10): DbVisit[] {
+  return db
+    .prepare("SELECT * FROM visits ORDER BY created_at DESC LIMIT ?")
+    .all(limit) as DbVisit[];
+}
+
+export function getComments(postId: number): DbComment[] {
+  return db
+    .prepare(
+      "SELECT * FROM comments WHERE post_id = ? ORDER BY created_at DESC"
+    )
+    .all(postId) as DbComment[];
+}
+
+export function createComment(
+  postId: number,
+  authorName: string,
+  content: string
+) {
+  const stmt = db.prepare(
+    "INSERT INTO comments (post_id, author_name, content) VALUES (?, ?, ?)"
+  );
+  return stmt.run(postId, authorName, content);
+}
+
+export function logVisit(
+  ip: string,
+  city: string,
+  country: string,
+  path: string
+) {
+  const stmt = db.prepare(
+    "INSERT INTO visits (ip, city, country, path) VALUES (?, ?, ?, ?)"
+  );
+  return stmt.run(ip, city, country, path);
+}
+
+export function createCategory(name: string) {
+  try {
+    const stmt = db.prepare("INSERT INTO categories (name) VALUES (?)");
+    const info = stmt.run(name);
+    return info.lastInsertRowid;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code: string }).code === "SQLITE_CONSTRAINT_UNIQUE"
+    ) {
+      // If it exists, return the existing ID
+      const existing = db
+        .prepare("SELECT id FROM categories WHERE name = ?")
+        .get(name) as { id: number };
+      return existing.id;
+    }
+    throw error;
+  }
 }

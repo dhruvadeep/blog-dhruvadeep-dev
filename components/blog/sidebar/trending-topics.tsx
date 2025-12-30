@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import { getTopPosts } from "@/lib/db/queries";
+import Link from "next/link";
 
 export async function TrendingTopics() {
   const topPosts = getTopPosts(5);
@@ -10,7 +11,7 @@ export async function TrendingTopics() {
       <CardHeader className="p-6 pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-primary" />
-          Blog Insights
+          Trending
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 pt-4 space-y-6">
@@ -20,9 +21,12 @@ export async function TrendingTopics() {
           ) : (
             topPosts.map((post, index) => (
               <div key={index} className="flex items-center justify-between">
-                <span className="text-sm font-medium line-clamp-1 flex-1 mr-4">
+                <Link
+                  href={`/post/${post.slug || post.id}`}
+                  className="text-sm font-medium line-clamp-1 flex-1 mr-4 hover:underline"
+                >
                   {post.title}
-                </span>
+                </Link>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {post.views} views
                 </span>

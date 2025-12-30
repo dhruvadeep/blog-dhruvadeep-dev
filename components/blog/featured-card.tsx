@@ -14,7 +14,7 @@ interface FeaturedCardProps {
 
 export function FeaturedCard({ post }: FeaturedCardProps) {
   return (
-    <Link href={`/post/${post.id}`} className="block">
+    <Link href={`/post/${post.slug || post.id}`} className="block">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

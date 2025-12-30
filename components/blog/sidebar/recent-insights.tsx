@@ -18,7 +18,7 @@ export function RecentInsights({ insights }: RecentInsightsProps) {
         {insights.map((insight) => (
           <Link
             key={insight.id}
-            href={`/post/${insight.id}`}
+            href={`/post/${insight.slug || insight.id}`}
             className="group flex items-start gap-4 cursor-pointer"
           >
             <div className="relative h-16 w-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">

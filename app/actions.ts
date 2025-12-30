@@ -10,6 +10,8 @@ import {
   addSubscriber,
   createTag,
   deleteTag,
+  createCategory,
+  createComment,
 } from "@/lib/db/queries";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -41,8 +43,15 @@ export async function createPostAction(formData: FormData) {
   const content = formData.get("content") as string;
   const cover_image = formData.get("cover_image") as string;
   const author_id = parseInt(formData.get("author_id") as string);
-  const category_id = parseInt(formData.get("category_id") as string);
+  // const category_id = parseInt(formData.get("category_id") as string);
+  const category_name = formData.get("category") as string;
   const read_time = formData.get("read_time") as string;
+
+  let category_id = 1; // Default
+  if (category_name) {
+    const result = createCategory(category_name);
+    category_id = typeof result === "bigint" ? Number(result) : result;
+  }
 
   createPost({
     title,
@@ -59,6 +68,22 @@ export async function createPostAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin/dashboard");
   redirect("/admin/dashboard");
+}
+
+export async function createCommentAction(formData: FormData) {
+  const postId = parseInt(formData.get("postId") as string);
+  const content = formData.get("content") as string;
+  // Allow anonymous/random names if not provided
+  const authorName =
+    (formData.get("authorName") as string) ||
+    `Anonymous-${Math.floor(Math.random() * 10000)}`;
+
+  if (!postId || !content) {
+    return { error: "Missing required fields" };
+  }
+
+  createComment(postId, authorName, content);
+  revalidatePath(`/post/${postId}`); // We might need to revalidate slug path too if we change routing
 }
 
 export async function updatePostAction(id: number, formData: FormData) {

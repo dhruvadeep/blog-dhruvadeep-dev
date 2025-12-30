@@ -9,6 +9,7 @@ export async function Sidebar() {
 
   const recentInsights = recentDbPosts.map((p) => ({
     id: p.id,
+    slug: p.slug,
     title: p.title,
     date: new Date(p.created_at).toLocaleDateString("en-US", {
       month: "long",
