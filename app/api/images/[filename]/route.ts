@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ filename: string }> }
 ) {
   const filename = (await params).filename;
-  const image = getImage(filename);
+  const image = await getImage(filename);
 
   if (!image) {
     return new NextResponse("Image not found", { status: 404 });

@@ -24,6 +24,10 @@ interface EditPostFormProps {
     image: string;
     excerpt: string;
     slug: string;
+    seo_title?: string;
+    seo_description?: string;
+    seo_image?: string;
+    seo_keywords?: string;
   };
   categories: string[];
 }
@@ -36,6 +40,12 @@ export function EditPostForm({ post, categories }: EditPostFormProps) {
   const [image, setImage] = useState(post.image);
   const [slug, setSlug] = useState(post.slug);
   const [excerpt, setExcerpt] = useState(post.excerpt);
+  const [seoTitle, setSeoTitle] = useState(post.seo_title || "");
+  const [seoDescription, setSeoDescription] = useState(
+    post.seo_description || ""
+  );
+  const [seoImage, setSeoImage] = useState(post.seo_image || "");
+  const [seoKeywords, setSeoKeywords] = useState(post.seo_keywords || "");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,6 +58,10 @@ export function EditPostForm({ post, categories }: EditPostFormProps) {
     formData.append("excerpt", excerpt);
     formData.append("content", content); // Assuming content is HTML string
     formData.append("cover_image", image);
+    formData.append("seo_title", seoTitle);
+    formData.append("seo_description", seoDescription);
+    formData.append("seo_image", seoImage);
+    formData.append("seo_keywords", seoKeywords);
     // Note: Category ID handling might be needed if we store IDs, but for now we just pass strings or need to map back.
     // The DB expects category_id. We should probably pass categories as objects {id, name}.
     // For simplicity, let's assume we just update text fields for now or need to fix category handling.
@@ -117,6 +131,46 @@ export function EditPostForm({ post, categories }: EditPostFormProps) {
               value={image}
               onChange={(e) => setImage(e.target.value)}
               placeholder="https://..."
+            />
+          </div>
+        </div>
+
+        <div className="border rounded-lg p-4 space-y-4 bg-muted/20">
+          <h3 className="font-medium">SEO Settings (Optional)</h3>
+          <div className="grid gap-2">
+            <Label htmlFor="seo_title">SEO Title</Label>
+            <Input
+              id="seo_title"
+              value={seoTitle}
+              onChange={(e) => setSeoTitle(e.target.value)}
+              placeholder="Title for search engines and social media (defaults to post title)"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="seo_description">SEO Description</Label>
+            <Input
+              id="seo_description"
+              value={seoDescription}
+              onChange={(e) => setSeoDescription(e.target.value)}
+              placeholder="Description for search engines (defaults to excerpt)"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="seo_image">SEO Image URL</Label>
+            <Input
+              id="seo_image"
+              value={seoImage}
+              onChange={(e) => setSeoImage(e.target.value)}
+              placeholder="Image for social media sharing (defaults to cover image)"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="seo_keywords">Keywords</Label>
+            <Input
+              id="seo_keywords"
+              value={seoKeywords}
+              onChange={(e) => setSeoKeywords(e.target.value)}
+              placeholder="Comma separated keywords (e.g. nextjs, react, seo)"
             />
           </div>
         </div>

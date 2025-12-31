@@ -4,17 +4,18 @@ import {
   getSubscriberCount,
   getEngagementRate,
   getRecentActivity,
+  getTotalViews,
 } from "@/lib/db/queries";
 import { Eye, Users, FileText, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default function DashboardOverview() {
-  const posts = getAllPosts();
-  const totalViews = posts.reduce((acc, post) => acc + (post.views || 0), 0);
-  const subscriberCount = getSubscriberCount();
-  const engagementRate = getEngagementRate();
-  const recentActivity = getRecentActivity();
+export default async function DashboardOverview() {
+  const posts = await getAllPosts();
+  const totalViews = await getTotalViews();
+  const subscriberCount = await getSubscriberCount();
+  const engagementRate = await getEngagementRate();
+  const recentActivity = await getRecentActivity();
 
   const stats = [
     {
@@ -91,7 +92,7 @@ export default function DashboardOverview() {
                         {activity.country || "Unknown Country"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(activity.created_at).toLocaleString()} - IP:{" "}
+                        {activity.created_at.toLocaleString()} - IP:{" "}
                         {activity.ip}
                       </p>
                     </div>

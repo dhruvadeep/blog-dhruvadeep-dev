@@ -9,8 +9,8 @@ export default async function EditPostPage({
 }) {
   const { id } = await params;
   const postId = parseInt(id);
-  const post = getPostById(postId);
-  const categories = getCategories();
+  const post = await getPostById(postId);
+  const categories = await getCategories();
 
   if (!post) {
     notFound();
@@ -24,6 +24,10 @@ export default async function EditPostPage({
     image: post.cover_image || "",
     excerpt: post.excerpt || "",
     slug: post.slug,
+    seo_title: post.seo_title || "",
+    seo_description: post.seo_description || "",
+    seo_image: post.seo_image || "",
+    seo_keywords: post.seo_keywords || "",
   };
 
   const categoryNames = categories.map((c) => c.name);

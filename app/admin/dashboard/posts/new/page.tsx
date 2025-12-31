@@ -1,8 +1,8 @@
 import { CreatePostForm } from "@/components/admin/create-post-form";
 import { getCategories } from "@/lib/db/queries";
 
-export default function NewPostPage() {
-  const categories = getCategories();
+export default async function NewPostPage() {
+  const categories = await getCategories();
   const categoryNames = categories.map((c) => c.name);
 
   return (

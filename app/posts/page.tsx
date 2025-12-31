@@ -17,8 +17,10 @@ export default async function AllPostsPage({
   const params = await searchParams;
   const searchQuery = params.search;
 
-  const dbPosts = searchQuery ? searchPosts(searchQuery) : getAllPosts();
-  const dbCategories = getCategories();
+  const dbPosts = searchQuery
+    ? await searchPosts(searchQuery)
+    : await getAllPosts();
+  const dbCategories = await getCategories();
 
   const posts: Post[] = dbPosts.map((p) => ({
     id: p.id,

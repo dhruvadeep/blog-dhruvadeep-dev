@@ -4,7 +4,7 @@ import { getTopPosts } from "@/lib/db/queries";
 import Link from "next/link";
 
 export async function TrendingTopics() {
-  const topPosts = getTopPosts(5);
+  const topPosts = await getTopPosts(5);
 
   return (
     <Card className="bg-card border-border/50 shadow-sm rounded-3xl overflow-hidden">

@@ -101,6 +101,42 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
           </div>
         </div>
 
+        <div className="border rounded-lg p-4 space-y-4 bg-muted/20">
+          <h3 className="font-medium">SEO Settings (Optional)</h3>
+          <div className="grid gap-2">
+            <Label htmlFor="seo_title">SEO Title</Label>
+            <Input
+              id="seo_title"
+              name="seo_title"
+              placeholder="Title for search engines and social media (defaults to post title)"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="seo_description">SEO Description</Label>
+            <Input
+              id="seo_description"
+              name="seo_description"
+              placeholder="Description for search engines (defaults to excerpt)"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="seo_image">SEO Image URL</Label>
+            <Input
+              id="seo_image"
+              name="seo_image"
+              placeholder="Image for social media sharing (defaults to cover image)"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="seo_keywords">Keywords</Label>
+            <Input
+              id="seo_keywords"
+              name="seo_keywords"
+              placeholder="Comma separated keywords (e.g. nextjs, react, seo)"
+            />
+          </div>
+        </div>
+
         <div className="grid gap-2">
           <Label>Content</Label>
           <div className="min-h-[500px]">

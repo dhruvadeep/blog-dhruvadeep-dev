@@ -21,9 +21,9 @@ interface BlogPageProps {
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const { search } = await searchParams;
-  const dbPosts = getAllPosts(search);
-  const dbCategories = getCategories();
-  const dbFeaturedPost = getFeaturedPost();
+  const dbPosts = await getAllPosts(search);
+  const dbCategories = await getCategories();
+  const dbFeaturedPost = await getFeaturedPost();
 
   const posts: Post[] = dbPosts.map((p) => ({
     id: p.id,
@@ -88,7 +88,6 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-10">
             {/* Filter Tabs */}
-            <BlogFilters categories={categories} />
 
             {/* Post Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">

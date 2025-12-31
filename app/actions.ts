@@ -30,7 +30,7 @@ export async function uploadImage(formData: FormData) {
   const filename = `${Date.now()}-${file.name}`;
   const mimeType = file.type;
 
-  saveImage(filename, mimeType, buffer);
+  await saveImage(filename, mimeType, buffer);
 
   // Return the URL to access the image
   return { url: `/api/images/${filename}` };
@@ -46,14 +46,18 @@ export async function createPostAction(formData: FormData) {
   // const category_id = parseInt(formData.get("category_id") as string);
   const category_name = formData.get("category") as string;
   const read_time = formData.get("read_time") as string;
+  const seo_title = formData.get("seo_title") as string;
+  const seo_description = formData.get("seo_description") as string;
+  const seo_image = formData.get("seo_image") as string;
+  const seo_keywords = formData.get("seo_keywords") as string;
 
   let category_id = 1; // Default
   if (category_name) {
-    const result = createCategory(category_name);
+    const result = await createCategory(category_name);
     category_id = typeof result === "bigint" ? Number(result) : result;
   }
 
-  createPost({
+  await createPost({
     title,
     slug,
     excerpt,
@@ -62,7 +66,11 @@ export async function createPostAction(formData: FormData) {
     author_id,
     category_id,
     read_time,
-    published: 1, // Default to published for now
+    published: true, // Default to published for now
+    seo_title,
+    seo_description,
+    seo_image,
+    seo_keywords,
   });
 
   revalidatePath("/");
@@ -82,7 +90,7 @@ export async function createCommentAction(formData: FormData) {
     return { error: "Missing required fields" };
   }
 
-  createComment(postId, authorName, content);
+  await createComment(postId, authorName, content);
   revalidatePath(`/post/${postId}`); // We might need to revalidate slug path too if we change routing
 }
 
@@ -92,13 +100,21 @@ export async function updatePostAction(id: number, formData: FormData) {
   const excerpt = formData.get("excerpt") as string;
   const content = formData.get("content") as string;
   const cover_image = formData.get("cover_image") as string;
+  const seo_title = formData.get("seo_title") as string;
+  const seo_description = formData.get("seo_description") as string;
+  const seo_image = formData.get("seo_image") as string;
+  const seo_keywords = formData.get("seo_keywords") as string;
 
-  updatePost(id, {
+  await updatePost(id, {
     title,
     slug,
     excerpt,
     content,
     cover_image,
+    seo_title,
+    seo_description,
+    seo_image,
+    seo_keywords,
   });
 
   revalidatePath(`/post/${id}`); // Assuming route is /post/[id] or /post/[slug]
@@ -106,12 +122,12 @@ export async function updatePostAction(id: number, formData: FormData) {
 }
 
 export async function deletePostAction(id: number) {
-  deletePost(id);
+  await deletePost(id);
   revalidatePath("/admin/dashboard");
 }
 
 export async function setFeaturedPostAction(id: number) {
-  setFeaturedPost(id);
+  await setFeaturedPost(id);
   revalidatePath("/");
   revalidatePath("/admin/dashboard");
 }
@@ -121,7 +137,7 @@ export async function subscribeAction(formData: FormData) {
   if (!email) return { error: "Email is required" };
 
   try {
-    addSubscriber(email);
+    await addSubscriber(email);
     revalidatePath("/admin/dashboard");
     return { success: true };
   } catch (error: unknown) {
@@ -140,7 +156,7 @@ export async function createTagAction(formData: FormData) {
   if (!name) return { error: "Tag name is required" };
 
   try {
-    createTag(name);
+    await createTag(name);
     revalidatePath("/admin/dashboard/tags");
     return { success: true };
   } catch (error: unknown) {
@@ -153,7 +169,7 @@ export async function createTagAction(formData: FormData) {
 
 export async function deleteTagAction(id: number) {
   try {
-    deleteTag(id);
+    await deleteTag(id);
     revalidatePath("/admin/dashboard/tags");
     return { success: true };
   } catch {

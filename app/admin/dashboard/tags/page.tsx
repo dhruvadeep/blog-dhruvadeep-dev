@@ -12,8 +12,8 @@ import { DeleteTagButton } from "@/components/admin/delete-tag-button";
 
 export const dynamic = "force-dynamic";
 
-export default function TagsPage() {
-  const tags = getTags();
+export default async function TagsPage() {
+  const tags = await getTags();
 
   return (
     <div className="space-y-8">

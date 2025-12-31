@@ -6,7 +6,7 @@ import { Post } from "@/types/blog";
 export async function fetchPosts(page: number, search?: string) {
   const limit = 6;
   const offset = (page - 1) * limit;
-  const dbPosts = getAllPosts(search, limit, offset);
+  const dbPosts = await getAllPosts(search, limit, offset);
 
   const posts: Post[] = dbPosts.map((p) => ({
     id: p.id,

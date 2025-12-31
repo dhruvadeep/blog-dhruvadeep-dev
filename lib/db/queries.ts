@@ -1,4 +1,4 @@
-import db from "./index";
+import pool from "./index";
 
 export interface DbPost {
   id: number;
@@ -10,13 +10,17 @@ export interface DbPost {
   author_id: number;
   category_id: number;
   read_time: string;
-  published: number;
+  published: boolean;
   created_at: string;
   author_name: string;
   author_avatar: string;
   category_name: string;
   views: number;
-  is_featured: number;
+  is_featured: boolean;
+  seo_title?: string;
+  seo_description?: string;
+  seo_image?: string;
+  seo_keywords?: string;
 }
 
 export interface DbCategory {
@@ -36,8 +40,8 @@ export interface DbSubscriber {
   created_at: string;
 }
 
-export function getFeaturedPost(): DbPost | undefined {
-  const stmt = db.prepare(`
+export async function getFeaturedPost(): Promise<DbPost | undefined> {
+  const query = `
     SELECT 
       p.*, 
       a.name as author_name, 
@@ -48,25 +52,35 @@ export function getFeaturedPost(): DbPost | undefined {
     LEFT JOIN authors a ON p.author_id = a.id
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN analytics an ON p.id = an.post_id
-    WHERE p.is_featured = 1
+    WHERE p.is_featured = TRUE
     LIMIT 1
-  `);
-  return stmt.get() as DbPost | undefined;
+  `;
+  const result = await pool.query(query);
+  return result.rows[0] as DbPost | undefined;
 }
 
-export function setFeaturedPost(id: number) {
-  const transaction = db.transaction(() => {
-    db.prepare("UPDATE posts SET is_featured = 0").run();
-    db.prepare("UPDATE posts SET is_featured = 1 WHERE id = ?").run(id);
-  });
-  transaction();
+export async function setFeaturedPost(id: number) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("UPDATE posts SET is_featured = FALSE");
+    await client.query("UPDATE posts SET is_featured = TRUE WHERE id = $1", [
+      id,
+    ]);
+    await client.query("COMMIT");
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
-export function getAllPosts(
+export async function getAllPosts(
   search?: string,
   limit?: number,
   offset?: number
-): DbPost[] {
+): Promise<DbPost[]> {
   let query = `
     SELECT 
       p.*, 
@@ -80,28 +94,35 @@ export function getAllPosts(
     LEFT JOIN analytics an ON p.id = an.post_id
   `;
 
+  const params: (string | number)[] = [];
+  let paramIndex = 1;
+
   if (search) {
-    query += ` WHERE p.title LIKE @search OR p.excerpt LIKE @search OR p.content LIKE @search`;
+    query += ` WHERE p.title LIKE $${paramIndex} OR p.excerpt LIKE $${paramIndex} OR p.content LIKE $${paramIndex}`;
+    params.push(`%${search}%`);
+    paramIndex++;
   }
 
   query += ` ORDER BY p.created_at DESC`;
 
-  if (limit !== undefined && offset !== undefined) {
-    query += ` LIMIT @limit OFFSET @offset`;
+  if (limit !== undefined) {
+    query += ` LIMIT $${paramIndex}`;
+    params.push(limit);
+    paramIndex++;
   }
 
-  const stmt = db.prepare(query);
+  if (offset !== undefined) {
+    query += ` OFFSET $${paramIndex}`;
+    params.push(offset);
+    paramIndex++;
+  }
 
-  const params: Record<string, string | number> = {};
-  if (search) params.search = `%${search}%`;
-  if (limit !== undefined) params.limit = limit;
-  if (offset !== undefined) params.offset = offset;
-
-  return stmt.all(params) as DbPost[];
+  const result = await pool.query(query, params);
+  return result.rows as DbPost[];
 }
 
-export function getRecentPosts(limit: number = 3): DbPost[] {
-  const stmt = db.prepare(`
+export async function getRecentPosts(limit: number = 3): Promise<DbPost[]> {
+  const query = `
     SELECT 
       p.*, 
       a.name as author_name, 
@@ -113,13 +134,14 @@ export function getRecentPosts(limit: number = 3): DbPost[] {
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN analytics an ON p.id = an.post_id
     ORDER BY p.created_at DESC
-    LIMIT ?
-  `);
-  return stmt.all(limit) as DbPost[];
+    LIMIT $1
+  `;
+  const result = await pool.query(query, [limit]);
+  return result.rows as DbPost[];
 }
 
-export function searchPosts(query: string): DbPost[] {
-  const stmt = db.prepare(`
+export async function searchPosts(query: string): Promise<DbPost[]> {
+  const sql = `
     SELECT 
       p.*, 
       a.name as author_name, 
@@ -130,15 +152,16 @@ export function searchPosts(query: string): DbPost[] {
     LEFT JOIN authors a ON p.author_id = a.id
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN analytics an ON p.id = an.post_id
-    WHERE p.title LIKE ? OR p.excerpt LIKE ? OR p.content LIKE ?
+    WHERE p.title LIKE $1 OR p.excerpt LIKE $1 OR p.content LIKE $1
     ORDER BY p.created_at DESC
-  `);
+  `;
   const searchPattern = `%${query}%`;
-  return stmt.all(searchPattern, searchPattern, searchPattern) as DbPost[];
+  const result = await pool.query(sql, [searchPattern]);
+  return result.rows as DbPost[];
 }
 
-export function getPostBySlug(slug: string): DbPost | undefined {
-  const stmt = db.prepare(`
+export async function getPostBySlug(slug: string): Promise<DbPost | undefined> {
+  const query = `
     SELECT 
       p.*, 
       a.name as author_name, 
@@ -149,13 +172,14 @@ export function getPostBySlug(slug: string): DbPost | undefined {
     LEFT JOIN authors a ON p.author_id = a.id
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN analytics an ON p.id = an.post_id
-    WHERE p.slug = ?
-  `);
-  return stmt.get(slug) as DbPost | undefined;
+    WHERE p.slug = $1
+  `;
+  const result = await pool.query(query, [slug]);
+  return result.rows[0] as DbPost | undefined;
 }
 
-export function getPostById(id: number): DbPost | undefined {
-  const stmt = db.prepare(`
+export async function getPostById(id: number): Promise<DbPost | undefined> {
+  const query = `
     SELECT 
       p.*, 
       a.name as author_name, 
@@ -166,164 +190,224 @@ export function getPostById(id: number): DbPost | undefined {
     LEFT JOIN authors a ON p.author_id = a.id
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN analytics an ON p.id = an.post_id
-    WHERE p.id = ?
-  `);
-  return stmt.get(id) as DbPost | undefined;
+    WHERE p.id = $1
+  `;
+  const result = await pool.query(query, [id]);
+  return result.rows[0] as DbPost | undefined;
 }
 
-export function createPost(post: Partial<DbPost>) {
-  const stmt = db.prepare(`
-    INSERT INTO posts (title, slug, excerpt, content, cover_image, author_id, category_id, read_time, published)
-    VALUES (@title, @slug, @excerpt, @content, @cover_image, @author_id, @category_id, @read_time, @published)
-  `);
-  const info = stmt.run(post);
+export async function createPost(post: Partial<DbPost>) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  // Initialize analytics
-  db.prepare("INSERT INTO analytics (post_id, views) VALUES (?, 0)").run(
-    info.lastInsertRowid
-  );
+    const query = `
+      INSERT INTO posts (title, slug, excerpt, content, cover_image, author_id, category_id, read_time, published, seo_title, seo_description, seo_image, seo_keywords)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING id
+    `;
+    const values = [
+      post.title,
+      post.slug,
+      post.excerpt,
+      post.content,
+      post.cover_image,
+      post.author_id,
+      post.category_id,
+      post.read_time,
+      post.published,
+      post.seo_title,
+      post.seo_description,
+      post.seo_image,
+      post.seo_keywords,
+    ];
 
-  return info.lastInsertRowid;
+    const res = await client.query(query, values);
+    const postId = res.rows[0].id;
+
+    // Initialize analytics
+    await client.query(
+      "INSERT INTO analytics (post_id, views) VALUES ($1, 0)",
+      [postId]
+    );
+
+    await client.query("COMMIT");
+    return postId;
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
-export function updatePost(id: number, post: Partial<DbPost>) {
+export async function updatePost(id: number, post: Partial<DbPost>) {
   const sets: string[] = [];
-  const params: Record<string, string | number> = { id };
+  const values: (string | number)[] = [];
+  let paramIndex = 1;
 
   if (post.title) {
-    sets.push("title = @title");
-    params.title = post.title;
+    sets.push(`title = $${paramIndex++}`);
+    values.push(post.title);
   }
   if (post.slug) {
-    sets.push("slug = @slug");
-    params.slug = post.slug;
+    sets.push(`slug = $${paramIndex++}`);
+    values.push(post.slug);
   }
   if (post.excerpt) {
-    sets.push("excerpt = @excerpt");
-    params.excerpt = post.excerpt;
+    sets.push(`excerpt = $${paramIndex++}`);
+    values.push(post.excerpt);
   }
   if (post.content) {
-    sets.push("content = @content");
-    params.content = post.content;
+    sets.push(`content = $${paramIndex++}`);
+    values.push(post.content);
   }
   if (post.cover_image) {
-    sets.push("cover_image = @cover_image");
-    params.cover_image = post.cover_image;
+    sets.push(`cover_image = $${paramIndex++}`);
+    values.push(post.cover_image);
   }
   if (post.read_time) {
-    sets.push("read_time = @read_time");
-    params.read_time = post.read_time;
+    sets.push(`read_time = $${paramIndex++}`);
+    values.push(post.read_time);
+  }
+  if (post.seo_title) {
+    sets.push(`seo_title = $${paramIndex++}`);
+    values.push(post.seo_title);
+  }
+  if (post.seo_description) {
+    sets.push(`seo_description = $${paramIndex++}`);
+    values.push(post.seo_description);
+  }
+  if (post.seo_image) {
+    sets.push(`seo_image = $${paramIndex++}`);
+    values.push(post.seo_image);
+  }
+  if (post.seo_keywords) {
+    sets.push(`seo_keywords = $${paramIndex++}`);
+    values.push(post.seo_keywords);
   }
 
   if (sets.length === 0) return;
 
-  const stmt = db.prepare(`UPDATE posts SET ${sets.join(", ")} WHERE id = @id`);
-  return stmt.run(params);
+  values.push(id);
+  const query = `UPDATE posts SET ${sets.join(", ")} WHERE id = $${paramIndex}`;
+
+  await pool.query(query, values);
 }
 
-export function deletePost(id: number) {
-  db.prepare("DELETE FROM analytics WHERE post_id = ?").run(id);
-  db.prepare("DELETE FROM post_tags WHERE post_id = ?").run(id);
-  return db.prepare("DELETE FROM posts WHERE id = ?").run(id);
-}
-
-export function incrementViews(postId: number) {
-  const stmt = db.prepare(`
-    UPDATE analytics 
-    SET views = views + 1, last_updated = CURRENT_TIMESTAMP 
-    WHERE post_id = ?
-  `);
-  return stmt.run(postId);
-}
-
-export function saveImage(filename: string, mimeType: string, data: Buffer) {
-  const stmt = db.prepare(
-    "INSERT INTO images (filename, mime_type, data) VALUES (?, ?, ?)"
-  );
-  const info = stmt.run(filename, mimeType, data);
-  return info.lastInsertRowid;
-}
-
-export function getImage(filename: string) {
-  const stmt = db.prepare("SELECT * FROM images WHERE filename = ?");
-  return stmt.get(filename) as { mime_type: string; data: Buffer } | undefined;
-}
-
-export function getCategories() {
-  return db.prepare("SELECT * FROM categories").all() as DbCategory[];
-}
-
-export function getAuthors() {
-  return db.prepare("SELECT * FROM authors").all();
-}
-
-export function addSubscriber(email: string) {
+export async function deletePost(id: number) {
+  const client = await pool.connect();
   try {
-    const stmt = db.prepare("INSERT INTO subscribers (email) VALUES (?)");
-    return stmt.run(email);
-  } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      (error as { code: string }).code === "SQLITE_CONSTRAINT_UNIQUE"
-    ) {
+    await client.query("BEGIN");
+    await client.query("DELETE FROM analytics WHERE post_id = $1", [id]);
+    await client.query("DELETE FROM post_tags WHERE post_id = $1", [id]);
+    await client.query("DELETE FROM posts WHERE id = $1", [id]);
+    await client.query("COMMIT");
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+export async function incrementViews(postId: number, count: number = 1) {
+  const query = `
+    UPDATE analytics 
+    SET views = views + $2, last_updated = CURRENT_TIMESTAMP 
+    WHERE post_id = $1
+  `;
+  await pool.query(query, [postId, count]);
+}
+
+export async function saveImage(
+  filename: string,
+  mimeType: string,
+  data: Buffer
+) {
+  const query =
+    "INSERT INTO images (filename, mime_type, data) VALUES ($1, $2, $3) RETURNING id";
+  const result = await pool.query(query, [filename, mimeType, data]);
+  return result.rows[0].id;
+}
+
+export async function getImage(filename: string) {
+  const query = "SELECT * FROM images WHERE filename = $1";
+  const result = await pool.query(query, [filename]);
+  return result.rows[0] as { mime_type: string; data: Buffer } | undefined;
+}
+
+export async function getCategories() {
+  const result = await pool.query("SELECT * FROM categories");
+  return result.rows as DbCategory[];
+}
+
+export async function getAuthors() {
+  const result = await pool.query("SELECT * FROM authors");
+  return result.rows;
+}
+
+export async function addSubscriber(email: string) {
+  try {
+    const query = "INSERT INTO subscribers (email) VALUES ($1)";
+    await pool.query(query, [email]);
+  } catch (error: any) {
+    if (error.code === "23505") {
+      // unique_violation
       throw new Error("Email already subscribed");
     }
     throw error;
   }
 }
 
-export function getSubscribers() {
-  return db
-    .prepare("SELECT * FROM subscribers ORDER BY created_at DESC")
-    .all() as DbSubscriber[];
+export async function getSubscribers() {
+  const result = await pool.query(
+    "SELECT * FROM subscribers ORDER BY created_at DESC"
+  );
+  return result.rows as DbSubscriber[];
 }
 
-export function getTotalViews() {
-  const result = db
-    .prepare("SELECT SUM(views) as total FROM analytics")
-    .get() as { total: number };
-  return result.total || 0;
+export async function getTotalViews(): Promise<number> {
+  const result = await pool.query("SELECT SUM(views) as total FROM analytics");
+  return parseInt(result.rows[0]?.total || "0");
 }
 
-export function getTopPosts(limit: number = 5) {
-  return db
-    .prepare(
-      `
+export async function getTopPosts(limit: number = 5) {
+  const query = `
     SELECT p.id, p.title, p.slug, a.views 
     FROM posts p 
     JOIN analytics a ON p.id = a.post_id 
     ORDER BY a.views DESC 
-    LIMIT ?
-  `
-    )
-    .all(limit) as { id: number; title: string; slug: string; views: number }[];
+    LIMIT $1
+  `;
+  const result = await pool.query(query, [limit]);
+  return result.rows as {
+    id: number;
+    title: string;
+    slug: string;
+    views: number;
+  }[];
 }
 
-export function getTags() {
-  return db.prepare("SELECT * FROM tags ORDER BY name ASC").all() as DbTag[];
+export async function getTags() {
+  const result = await pool.query("SELECT * FROM tags ORDER BY name ASC");
+  return result.rows as DbTag[];
 }
 
-export function createTag(name: string) {
+export async function createTag(name: string) {
   try {
-    const stmt = db.prepare("INSERT INTO tags (name) VALUES (?)");
-    return stmt.run(name);
-  } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      (error as { code: string }).code === "SQLITE_CONSTRAINT_UNIQUE"
-    ) {
+    const query = "INSERT INTO tags (name) VALUES ($1)";
+    await pool.query(query, [name]);
+  } catch (error: any) {
+    if (error.code === "23505") {
       throw new Error("Tag already exists");
     }
     throw error;
   }
 }
 
-export function deleteTag(id: number) {
-  return db.prepare("DELETE FROM tags WHERE id = ?").run(id);
+export async function deleteTag(id: number) {
+  await pool.query("DELETE FROM tags WHERE id = $1", [id]);
 }
 
 export interface DbComment {
@@ -340,86 +424,114 @@ export interface DbVisit {
   city: string;
   country: string;
   path: string;
-  created_at: string;
+  created_at: Date;
 }
 
-export function getSubscriberCount(): number {
-  const result = db
-    .prepare("SELECT COUNT(*) as count FROM subscribers")
-    .get() as { count: number };
-  return result.count;
+export async function getSubscriberCount(): Promise<number> {
+  const result = await pool.query("SELECT COUNT(*) as count FROM subscribers");
+  return parseInt(result.rows[0].count);
 }
 
-export function getEngagementRate(): number {
-  // Simple engagement rate: (Total Views / Total Posts) / 100 (just a placeholder logic)
-  // Or maybe (Total Comments + Total Views) / Total Posts?
-  // Let's do: Total Views / Total Posts (Average Views per Post)
-  const totalViews = getTotalViews();
-  const totalPosts = db
-    .prepare("SELECT COUNT(*) as count FROM posts")
-    .get() as { count: number };
+export async function getEngagementRate(): Promise<number> {
+  const totalViews = await getTotalViews();
+  const result = await pool.query("SELECT COUNT(*) as count FROM posts");
+  const totalPosts = parseInt(result.rows[0].count);
 
-  if (totalPosts.count === 0) return 0;
+  if (totalPosts === 0) return 0;
 
-  // Return average views per post as a "rate" or score
-  return Math.round((totalViews / totalPosts.count) * 10) / 10;
+  return Math.round((totalViews / totalPosts) * 10) / 10;
 }
 
-export function getRecentActivity(limit: number = 10): DbVisit[] {
-  return db
-    .prepare("SELECT * FROM visits ORDER BY created_at DESC LIMIT ?")
-    .all(limit) as DbVisit[];
+export async function getRecentActivity(
+  limit: number = 10
+): Promise<DbVisit[]> {
+  const result = await pool.query(
+    "SELECT * FROM visits ORDER BY created_at DESC LIMIT $1",
+    [limit]
+  );
+  return result.rows as DbVisit[];
 }
 
-export function getComments(postId: number): DbComment[] {
-  return db
-    .prepare(
-      "SELECT * FROM comments WHERE post_id = ? ORDER BY created_at DESC"
-    )
-    .all(postId) as DbComment[];
+export async function getComments(postId: number): Promise<DbComment[]> {
+  const result = await pool.query(
+    "SELECT * FROM comments WHERE post_id = $1 ORDER BY created_at DESC",
+    [postId]
+  );
+  return result.rows as DbComment[];
 }
 
-export function createComment(
+export async function createComment(
   postId: number,
   authorName: string,
   content: string
 ) {
-  const stmt = db.prepare(
-    "INSERT INTO comments (post_id, author_name, content) VALUES (?, ?, ?)"
-  );
-  return stmt.run(postId, authorName, content);
+  const query =
+    "INSERT INTO comments (post_id, author_name, content) VALUES ($1, $2, $3)";
+  await pool.query(query, [postId, authorName, content]);
 }
 
-export function logVisit(
+export async function logVisit(
   ip: string,
   city: string,
   country: string,
   path: string
 ) {
-  const stmt = db.prepare(
-    "INSERT INTO visits (ip, city, country, path) VALUES (?, ?, ?, ?)"
-  );
-  return stmt.run(ip, city, country, path);
+  const query =
+    "INSERT INTO visits (ip, city, country, path) VALUES ($1, $2, $3, $4)";
+  await pool.query(query, [ip, city, country, path]);
 }
 
-export function createCategory(name: string) {
+export async function createCategory(name: string) {
   try {
-    const stmt = db.prepare("INSERT INTO categories (name) VALUES (?)");
-    const info = stmt.run(name);
-    return info.lastInsertRowid;
-  } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      (error as { code: string }).code === "SQLITE_CONSTRAINT_UNIQUE"
-    ) {
-      // If it exists, return the existing ID
-      const existing = db
-        .prepare("SELECT id FROM categories WHERE name = ?")
-        .get(name) as { id: number };
-      return existing.id;
+    const query = "INSERT INTO categories (name) VALUES ($1) RETURNING id";
+    const result = await pool.query(query, [name]);
+    return result.rows[0].id;
+  } catch (error: any) {
+    if (error.code === "23505") {
+      const existing = await pool.query(
+        "SELECT id FROM categories WHERE name = $1",
+        [name]
+      );
+      return existing.rows[0].id;
     }
     throw error;
   }
+}
+
+export async function getDailyStats(days: number = 7) {
+  const viewsQuery = `
+    SELECT 
+      to_char(created_at, 'Mon DD') as name,
+      COUNT(*) as views
+    FROM visits
+    WHERE created_at >= NOW() - INTERVAL '${days} days'
+    GROUP BY to_char(created_at, 'Mon DD'), DATE(created_at)
+    ORDER BY DATE(created_at) ASC
+  `;
+
+  const commentsQuery = `
+    SELECT 
+      to_char(created_at, 'Mon DD') as name,
+      COUNT(*) as comments
+    FROM comments
+    WHERE created_at >= NOW() - INTERVAL '${days} days'
+    GROUP BY to_char(created_at, 'Mon DD'), DATE(created_at)
+    ORDER BY DATE(created_at) ASC
+  `;
+
+  const [viewsRes, commentsRes] = await Promise.all([
+    pool.query(viewsQuery),
+    pool.query(commentsQuery),
+  ]);
+
+  return {
+    views: viewsRes.rows.map((r) => ({
+      name: r.name,
+      views: parseInt(r.views),
+    })),
+    comments: commentsRes.rows.map((r) => ({
+      name: r.name,
+      comments: parseInt(r.comments),
+    })),
+  };
 }

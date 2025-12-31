@@ -11,8 +11,8 @@ import { getSubscribers } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 
-export default function SubscribersPage() {
-  const subscribers = getSubscribers();
+export default async function SubscribersPage() {
+  const subscribers = await getSubscribers();
 
   return (
     <div className="space-y-8">

@@ -16,8 +16,8 @@ import { FeaturePostButton } from "@/components/admin/feature-post-button";
 
 export const dynamic = "force-dynamic";
 
-export default function PostsPage() {
-  const posts = getAllPosts();
+export default async function PostsPage() {
+  const posts = await getAllPosts();
 
   return (
     <div className="space-y-8">

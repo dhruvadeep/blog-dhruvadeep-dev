@@ -24,7 +24,7 @@ import { Metadata } from "next";
 
 // This is required for static site generation with dynamic routes
 export async function generateStaticParams() {
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   const params = posts.map((post) => ({
     id: post.id.toString(),
   }));
@@ -46,9 +46,9 @@ export async function generateMetadata({
   const { id } = await params;
   let dbPost;
   if (/^\d+$/.test(id)) {
-    dbPost = getPostById(parseInt(id));
+    dbPost = await getPostById(parseInt(id));
   } else {
-    dbPost = getPostBySlug(id);
+    dbPost = await getPostBySlug(id);
   }
 
   if (!dbPost) {
@@ -58,28 +58,31 @@ export async function generateMetadata({
   }
 
   return {
-    title: dbPost.title,
-    description: dbPost.excerpt,
+    title: dbPost.seo_title || dbPost.title,
+    description: dbPost.seo_description || dbPost.excerpt,
+    keywords: dbPost.seo_keywords
+      ? dbPost.seo_keywords.split(",").map((k) => k.trim())
+      : undefined,
     openGraph: {
-      title: dbPost.title,
-      description: dbPost.excerpt,
+      title: dbPost.seo_title || dbPost.title,
+      description: dbPost.seo_description || dbPost.excerpt,
       type: "article",
       publishedTime: dbPost.created_at,
       authors: [dbPost.author_name],
       images: [
         {
-          url: dbPost.cover_image,
+          url: dbPost.seo_image || dbPost.cover_image,
           width: 1200,
           height: 630,
-          alt: dbPost.title,
+          alt: dbPost.seo_title || dbPost.title,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: dbPost.title,
-      description: dbPost.excerpt,
-      images: [dbPost.cover_image],
+      title: dbPost.seo_title || dbPost.title,
+      description: dbPost.seo_description || dbPost.excerpt,
+      images: [dbPost.seo_image || dbPost.cover_image],
     },
   };
 }
@@ -93,9 +96,9 @@ export default async function PostPage({
 
   let dbPost;
   if (/^\d+$/.test(id)) {
-    dbPost = getPostById(parseInt(id));
+    dbPost = await getPostById(parseInt(id));
   } else {
-    dbPost = getPostBySlug(id);
+    dbPost = await getPostBySlug(id);
   }
 
   if (!dbPost) {
@@ -103,8 +106,8 @@ export default async function PostPage({
   }
 
   const postId = dbPost.id;
-  const recentDbPosts = getRecentPosts(3);
-  const comments = getComments(postId);
+  const recentDbPosts = await getRecentPosts(3);
+  const comments = await getComments(postId);
   const currentUrl = `https://yourblog.com/post/${dbPost.slug || dbPost.id}`; // Replace with actual domain
 
   // Log visit
@@ -113,7 +116,7 @@ export default async function PostPage({
     // We can skip logging during build time or handle it gracefully
     const headersList = await headers();
     const ip = headersList.get("x-forwarded-for") || "127.0.0.1";
-    logVisit(ip, "Unknown City", "Unknown Country", `/post/${id}`);
+    await logVisit(ip, "Unknown City", "Unknown Country", `/post/${id}`);
   } catch (e) {
     // console.error("Failed to log visit", e);
   }

@@ -5,7 +5,7 @@ import { RecentInsights } from "./recent-insights";
 import { getRecentPosts } from "@/lib/db/queries";
 
 export async function Sidebar() {
-  const recentDbPosts = getRecentPosts(3);
+  const recentDbPosts = await getRecentPosts(3);
 
   const recentInsights = recentDbPosts.map((p) => ({
     id: p.id,
